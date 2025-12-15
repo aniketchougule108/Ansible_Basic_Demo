@@ -1,0 +1,14 @@
+---
+- name: Create directory and copy file
+  hosts: localhost
+  tasks:
+  - name: Create directory with permission 700
+    ansible.builtin.file:
+      path: /home/ec2-user/aws
+      state: directory
+      mode: '700'
+  - name: Copy file to directory
+    ansible.builtin.copy:
+      src: /root/ansible.txt
+      dest: /home/ec2-user/aws
+      
