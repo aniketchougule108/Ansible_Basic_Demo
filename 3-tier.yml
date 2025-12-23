@@ -1,0 +1,89 @@
+# Web server
+---
+- name: installation of app server
+  hosts: webserver
+  become: yes
+  tasks:
+  - name: install nginx
+    ansible.builtin.dnf:
+       name: nginx
+       state: present
+  - name: start and enable nginx
+    ansible.builtin.systemd_service:
+       name: nginx
+       state: started
+       enabled: true
+  - name: Add PHP proxy config to nginx
+    ansible.builtin.blockinfile:
+     path: /etc/nginx/conf.d/custom.conf
+     create: yes
+     block: |
+           server {
+               listen 81;
+               server_name example.com;
+               root /usr/share/nginx/html;
+               index index.php index.html;
+
+           location / {
+               try_files $uri $uri/ =404;
+            }
+  
+           location ~ \.php$ {
+               include fastcgi_params;
+               fastcgi_pass 127.0.0.1:9000;
+               fastcgi_index index.php;
+               fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+               }
+            }
+    notify: Restart nginx
+  handlers:
+  - name: Restart nginx
+    ansible.builtin.systemd:
+      name: nginx
+      state: restarted
+
+# App Server
+- name: installation of app server
+  hosts: appserver
+  become: yes
+  vars:
+   packages:
+    - php
+    - php-fpm
+   services:
+    - php-fpm
+   web_file_path: /usr/share/nginx/html/index.php
+  tasks:
+  - name: install nginx, php ,php-fpm
+    ansible.builtin.dnf:
+       name: "{{packages}}"
+       state: present
+  - name: satrt and enable  php, php-fpm
+    ansible.builtin.systemd_service:
+      name: "{{item}}"
+      state: started
+      enabled: true
+    loop: "{{services}}"
+
+
+# DB server
+- name: installation on db server
+  hosts: dbserver
+  become: yes
+  vars: 
+   db_pkg: mariadb105-server
+   db_service: mariadb 
+   db_name: FCT
+  tasks: 
+  - name: install mariadb
+    ansible.builtin.dnf:
+      name: "{{db_pkg}}"
+      state: present
+  - name: start and enabled mariadb
+    ansible.builtin.systemd_service:
+     name: "{{db_service}}"
+     state: started
+     enabled: true
+  - name: create a database
+    ansible.builtin.shell: |
+     mysql -u root -e "CREATE DATABASE IF NOT EXISTS {{db_name}};"

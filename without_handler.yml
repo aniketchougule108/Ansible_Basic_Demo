@@ -1,0 +1,42 @@
+# install httpd without handler block
+---
+- name: Deployment of nginx 
+  hosts: targetserver
+  become: yes
+  vars: 
+   pkg: nginx
+   svc: nginx
+   file_path: /usr/share/nginx/html/index.html 
+   conf_file: /etc/nginx/conf.d/custom.conf
+  tasks: 
+  - name: install nginx
+    ansible.builtin.dnf:
+     name: "{{pkg}}"
+     state: present
+  # start and enabled nginx
+  - name: start and enabled nginx 
+    ansible.builtin.systemd_service:
+     name: "{{svc}}"
+     state: started
+     enabled: true
+  # add configuration 
+  - name: add configuration block
+    ansible.builtin.blockinfile:
+     path: "{{conf_file}}"
+     create: yes
+     block: |
+      http {
+            server {
+                listen 80;
+                   location / {
+                       root /usr/share/nginx/html/
+                       index index.html
+                       }
+                    }
+            }
+  # deploy index.html
+  - name: Deployment of index page
+    ansible.builtin.copy:
+     dest: "{{file_path}}"
+     content: |
+      <h1> This is my Nginx webserver </h1>

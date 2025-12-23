@@ -1,0 +1,68 @@
+#install nginx with handler block
+---
+- name: deployment of nginx withot handler
+  hosts: targetserver
+  become: yes
+  vars: 
+    pkg: nginx
+    svc: nginx
+    file_path: /usr/share/nginx/html/index.html
+    conf_file: /etc/nginx/conf.d/custom.conf
+  tasks:
+  # install nginx
+  - name: install nginx
+    ansible.builtin.dnf:
+      name: "{{pkg}}"
+      state: present
+
+  - name: stop nginx if running
+    ansible.builtin.systemd_service:
+      name: "{{ svc }}"
+      state: stopped
+    ignore_errors: yes
+
+  - name: remove old broken nginx config
+    ansible.builtin.file:
+      path: "{{ conf_file }}"
+      state: absent
+      
+  #add conf file in block
+  - name: add configuration block
+    ansible.builtin.blockinfile:
+      path: "{{conf_file}}"
+      create: yes
+      block: |    
+            server {
+                  listen 80;
+                  server_name example.com;
+ 
+                  location / {
+                      root /usr/share/nginx/html;
+                      index index.html;
+                  }
+            }
+          
+    notify: restart nginx
+  #deploy index.html
+  - name: deployment of index page
+    ansible.builtin.copy:
+      dest: "{{file_path}}"
+      content: <h1> this app is with handler</h1>
+
+  - name: validate nginx configuration
+    ansible.builtin.command: nginx -t
+    register: nginx_test
+    changed_when: false
+    failed_when: nginx_test.rc != 0
+
+  - name: start & enable nginx
+    ansible.builtin.systemd_service:
+      name: "{{ svc }}"
+      state: started
+      enabled: true
+  # define handlers
+  handlers:
+    - name: restart nginx
+      ansible.builtin.systemd_service:
+        name: "{{svc}}"
+        state: restarted

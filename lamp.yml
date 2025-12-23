@@ -5,48 +5,135 @@
   hosts: localhost
   become: yes
   tasks: 
+  
   # install httpd
-  - name: remove httpd
+  - name: install httpd
     ansible.builtin.dnf:
      name: httpd
-     state: absent
+     state: present
   # install maraiadb
-  - name: remove mariadb package
+  - name: install mariadb package
     ansible.builtin.dnf:
      name: mariadb105-server
-     state: absent
+     state: present
   # install php
-  - name: remove php package
+  - name: install php package
     ansible.builtin.dnf:
      name: 
       - php
       - php-fpm
-     state: absent
+     state: present
   # start httpd
-  - name: stop and disable httpd
+  - name: start and enable httpd
     ansible.builtin.systemd_service:
      name: httpd
-     state: stopped
-     enabled: false
+     state: started
+     enabled: true
   # start mariadb
-  - name: stop and disable mariadb
+  - name: start and enable mariadb
     ansible.builtin.systemd_service:
      name: mariadb
-     state: stopped
-     enabled: false
+     state: started
+     enabled: true
   # start php
-  - name: stop and disable php
+  - name: start and enable php
     ansible.builtin.systemd_service:
      name: php-fpm
-     state: stopped
-     enabled: false
+     state: started
+     enabled: true
   # deploy php
   - name: deploy php
     ansible.builtin.copy:
-     dest: /var/www/html/index.php
+     dest: /var/www/html/index.html
      content: |
-      <?php
-      phpinfo();
-      ?>
+      <!DOCTYPE html>
+       <html lang="en">
+       <head>
+       <meta charset="UTF-8">
+       <title>LAMP Stack Deployment Success</title>
+       <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 600px;
+        }
+        h1 {
+            color: #22c55e;
+            margin-bottom: 15px;
+        }
+        h2 {
+            margin-bottom: 25px;
+            font-weight: normal;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .stack {
+            margin-top: 20px;
+        }
+        .stack span {
+            display: inline-block;
+            background: #334155;
+            padding: 8px 14px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        </style>
+        </head>
+         <body>
+
+       <div class="container">
+        <h1>🎉 Deployment Successful!</h1>
+        <h2>LAMP Stack Deployed Using Ansible</h2>
+
+        <p>
+            Congratulations! Your <strong>LAMP Stack</strong> has been successfully
+            installed and configured using <strong>Ansible Automation</strong>.
+        </p>
+
+        <div class="stack">
+            <span>Linux</span>
+            <span>Apache</span>
+            <span>MySQL / MariaDB</span>
+            <span>PHP</span>
+            <span>Ansible</span>
+        </div>
+
+        <p>
+            This confirms that:
+            <br>✔ Apache is running
+            <br>✔ PHP is working
+            <br>✔ Server is ready for applications
+        </p>
+
+        <div class="footer">
+            <p>Automated Infrastructure | DevOps | Ansible</p>
+        </div>
+       </div>
+
+       </body>
+       </html>
+
 
 
